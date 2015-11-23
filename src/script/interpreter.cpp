@@ -403,8 +403,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
                         break;
 
-                    // Actually compare the specified inverse sequence number
-                    // with the input.
+                    // Compare the specified sequence number with the input.
                     if (!checker.CheckSequence(nSequence))
                         return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
 
