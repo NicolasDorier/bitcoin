@@ -38,6 +38,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     assert(inChainInputValue <= nValueIn);
 
     feeDelta = 0;
+    lockTimeVerified = true;
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
@@ -504,6 +505,7 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
     list<CTransaction> transactionsToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
+        it->SetLockTimeVerified(false);
         if (CheckLockTime(tx, flags)) {
             transactionsToRemove.push_back(tx);
         } else if (it->GetSpendsCoinbase()) {

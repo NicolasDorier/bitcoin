@@ -70,6 +70,7 @@ private:
     bool spendsCoinbase; //! keep track of transactions that spend a coinbase
     unsigned int sigOpCount; //! Legacy sig ops plus P2SH sig op count
     int64_t feeDelta; //! Used for determining the priority of the transaction for mining in a block
+    bool lockTimeVerified; //Used to determine if LockTime need to be reevaluated because of a reorg
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
@@ -97,6 +98,8 @@ public:
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
+    bool GetLockTimeVerified() const { return lockTimeVerified; }
+    void SetLockTimeVerified(bool verified) { lockTimeVerified = verified; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
     unsigned int GetSigOpCount() const { return sigOpCount; }
     int64_t GetModifiedFee() const { return nFee + feeDelta; }

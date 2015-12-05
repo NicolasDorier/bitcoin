@@ -222,24 +222,29 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             }
 
             prevheights.resize(0);
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-            {
-                // Read prev transaction
-                if (view.HaveCoins(txin.prevout.hash))
-                {
-                    const CCoins* coins = view.AccessCoins(txin.prevout.hash);
-                    assert(coins);
-                    prevheights.push_back(coins->nHeight);
-                }
-                else
-                {
-                    //Assume it is in mempool
-                    prevheights.push_back(index.nHeight);
-                }
-            }
 
-            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &prevheights, index))
-                continue;
+            if(!iter->GetLockTimeVerified())
+            {
+                BOOST_FOREACH(const CTxIn& txin, tx.vin)
+                {
+                    // Read prev transaction
+                    if (view.HaveCoins(txin.prevout.hash))
+                    {
+                        const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+                        assert(coins);
+                        prevheights.push_back(coins->nHeight);
+                    }
+                    else
+                    {
+                        //Assume it is in mempool
+                        prevheights.push_back(index.nHeight);
+                    }
+                }
+
+                if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &prevheights, index))
+                    continue;
+                iter->SetLockTimeVerified(true);
+            }
 
             unsigned int nTxSigOps = iter->GetSigOpCount();
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS) {
