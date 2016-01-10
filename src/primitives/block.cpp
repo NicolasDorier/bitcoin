@@ -31,3 +31,14 @@ std::string CBlock::ToString() const
     }
     return s.str();
 }
+
+size_t GetBlockCost(const CBlock& block)
+{    
+    // coreSize is the size of block without witness data
+    size_t coreSize = ::GetSerializeSize(block, SER_NETWORK, 0);
+    size_t totalSize = ::GetSerializeSize(block, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);    
+    // size_t witSize = totalSize - coreSize;    
+    // return witSize + 4 * coreSize;
+    // Since totalSize == witSize + coreSize, we can avoid a substraction
+    return totalSize + 3 * coreSize;
+
