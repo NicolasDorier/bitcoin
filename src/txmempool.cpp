@@ -8,6 +8,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "script/sigcache.h"
 #include "main.h"
 #include "policy/policy.h"
 #include "policy/fees.h"
@@ -621,7 +622,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     uint64_t innerUsage = 0;
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
-
+    CachedHashesMap cachedHashesMap;
     LOCK(cs);
     list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
@@ -682,7 +683,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             waitingOnDependants.push_back(&(*it));
         else {
             CValidationState state;
-            assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, NULL));
+            assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, cachedHashesMap, NULL));
             UpdateCoins(tx, state, mempoolDuplicate, 1000000);
         }
     }
@@ -696,7 +697,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
         } else {
-            assert(CheckInputs(entry->GetTx(), state, mempoolDuplicate, false, 0, false, NULL));
+            assert(CheckInputs(entry->GetTx(), state, mempoolDuplicate, false, 0, false, cachedHashesMap, NULL));
             UpdateCoins(entry->GetTx(), state, mempoolDuplicate, 1000000);
             stepsSinceLastRemove = 0;
         }
