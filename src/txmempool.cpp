@@ -8,6 +8,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "script/sigcache.h"
 #include "main.h"
 #include "policy/policy.h"
 #include "policy/fees.h"
