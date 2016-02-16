@@ -114,6 +114,7 @@ testScriptsExt = [
     'bip112-csv-p2p.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
+    'blockversion5-ism.py',
     'getblocktemplate_longpoll.py',
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
