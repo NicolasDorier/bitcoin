@@ -137,9 +137,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
-        int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? nMedianTimePast
-                                : pblock->GetBlockTime();
+        int64_t nLockTimeCutoff = nMedianTimePast;
 
         bool fPriorityBlock = nBlockPrioritySize > 0;
         if (fPriorityBlock) {
