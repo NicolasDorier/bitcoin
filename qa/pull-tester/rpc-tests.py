@@ -118,6 +118,7 @@ testScripts = [
     'abandonconflict.py',
 ]
 testScriptsExt = [
+    'bip9-softforks.py',
     'bip65-cltv.py',
     'bip65-cltv-p2p.py',
     'bip68-sequence.py',
