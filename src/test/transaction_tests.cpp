@@ -423,6 +423,38 @@ void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
     script = PushAll(stack);
 }
 
+    class CSignInput
+    {
+    private:
+        CKeyStore* keyStore;
+        CScript* scriptPubKey;
+        CMutableTransaction* mtx;
+        CAmount amount;
+        unsigned int nIn;
+        int hashType;
+    public:
+        CSignInput(): keyStore(NULL), scriptPubKey(NULL), mtx(NULL), amount(0), nIn(0), hashType(0){}
+        CSignInput(CKeyStore* keyStoreIn, CScript* scriptPubKeyIn, CMutableTransaction* mtxIn, unsigned int nInIn, CAmount amountIn, int hashTypeIn):
+                keyStore(keyStoreIn), scriptPubKey(scriptPubKeyIn), mtx(mtxIn), amount(amountIn), nIn(nInIn), hashType(hashTypeIn)
+        {
+
+        }
+        bool operator()()
+        {
+            return SignSignature(*keyStore, *scriptPubKey, *mtx, nIn, amount, hashType);
+        }
+
+        void swap(CSignInput &sign)
+        {
+            std::swap(keyStore, sign.keyStore);
+            std::swap(scriptPubKey, sign.scriptPubKey);
+            std::swap(mtx, sign.mtx);
+            std::swap(nIn, sign.nIn);
+            std::swap(amount, sign.amount);
+            std::swap(hashType, sign.hashType);
+        }
+    };
+
 BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     CMutableTransaction mtx;
     mtx.nVersion = 1;
@@ -457,24 +489,35 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
         mtx.vout[i].scriptPubKey = CScript() << OP_1;
     }
 
+    CachedHashesMap cachedHashesMap;
+    boost::thread_group threadGroup;
+
+    // Signature the transaction
+    CCheckQueue<CSignInput> scriptsignqueue(128);
+    CCheckQueueControl<CSignInput> signControl(&scriptsignqueue);
+    for (int i=0; i<20; i++)
+        threadGroup.create_thread(boost::bind(&CCheckQueue<CSignInput>::Thread, boost::ref(scriptsignqueue)));
+
+    std::vector<CSignInput> vSignatures;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        bool hashSigned = SignSignature(keystore, scriptPubKey, mtx, i, 1000, sigHashes.at(i % sigHashes.size()));
-        assert(hashSigned);
+        CSignInput sign(&keystore, &scriptPubKey, &mtx, i, 1000, sigHashes.at(i % sigHashes.size()));
+        vSignatures.push_back(CSignInput());
+        sign.swap(vSignatures.back());
     }
+    signControl.Add(vSignatures);
+
+    bool signCheck = signControl.Wait();
+    assert(signCheck);
+
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
 
     CTransaction tx;
     CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
     WithOrVersion(&ssout, SERIALIZE_TRANSACTION_WITNESS) << mtx;
     WithOrVersion(&ssout, SERIALIZE_TRANSACTION_WITNESS) >> tx;
 
-    CachedHashesMap cachedHashesMap;
-    boost::thread_group threadGroup;
-    CCheckQueue<CScriptCheck> scriptcheckqueue(128);
-    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
-
-    for (int i=0; i<20; i++)
-        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
-
+    // Checking the transaction
     CCoins coins;
     coins.nVersion = 1;
     coins.fCoinBase = false;
@@ -485,13 +528,19 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
         coins.vout.push_back(txout);
     }
 
+    CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+
+    for (int i=0; i<20; i++)
+        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
+
+    std::vector<CScriptCheck> vChecks;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        std::vector<CScriptCheck> vChecks;
         CScriptCheck check(coins, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &cachedHashesMap);
         vChecks.push_back(CScriptCheck());
         check.swap(vChecks.back());
-        control.Add(vChecks);
     }
+    control.Add(vChecks);
 
     bool controlCheck = control.Wait();
     assert(controlCheck);
