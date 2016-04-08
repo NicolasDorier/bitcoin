@@ -70,6 +70,7 @@ ECCryptoClosure instance_of_eccryptoclosure;
 }
 
 static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, CAmount amount,
+                                    unsigned char *hashPrevouts, unsigned char *hashSequence, unsigned char *hashOutputs,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
@@ -84,8 +85,21 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
 
         // Regardless of the verification result, the tx did not error.
         set_error(err, bitcoinconsensus_ERR_OK);
+        bool cacheProvided = hashPrevouts != NULL && hashSequence != NULL && hashOutputs != NULL;
         CachedHashes cachedHashes;
-        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), nIn < tx.wit.vtxinwit.size() ? &tx.wit.vtxinwit[nIn].scriptWitness : NULL, flags, TransactionSignatureChecker(&tx, nIn, amount, cachedHashes), NULL);
+        if(cacheProvided) {
+            cachedHashes.hashPrevouts = uint256(std::vector<unsigned char>(hashPrevouts, hashPrevouts + 32));
+            cachedHashes.hashSequence = uint256(std::vector<unsigned char>(hashSequence, hashSequence + 32));
+            cachedHashes.hashOutputs = uint256(std::vector<unsigned char>(hashOutputs, hashOutputs + 32));
+        }
+        bool result = VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), nIn < tx.wit.vtxinwit.size() ? &tx.wit.vtxinwit[nIn].scriptWitness : NULL, flags, TransactionSignatureChecker(&tx, nIn, amount, cachedHashes), NULL);
+        if(cacheProvided)
+        {
+            std::copy(cachedHashes.hashPrevouts.begin(), cachedHashes.hashPrevouts.end(), hashPrevouts);
+            std::copy(cachedHashes.hashSequence.begin(), cachedHashes.hashSequence.end(), hashSequence);
+            std::copy(cachedHashes.hashOutputs.begin(), cachedHashes.hashOutputs.end(), hashOutputs);
+        }
+        return result;
     } catch (const std::exception&) {
         return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
@@ -96,7 +110,16 @@ int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
     CAmount am(amount);
-    return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
+    return ::verify_script(scriptPubKey, scriptPubKeyLen, am, NULL, NULL, NULL, txTo, txToLen, nIn, flags, err);
+}
+
+int bitcoinconsensus_verify_script_with_amount_and_hashes(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, uint64_t amount,
+                                    unsigned char *hashPrevouts, unsigned char *hashSequence, unsigned char *hashOutputs,
+                                    const unsigned char *txTo        , unsigned int txToLen,
+                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+{
+    CAmount am(amount);
+    return ::verify_script(scriptPubKey, scriptPubKeyLen, am, hashPrevouts, hashSequence, hashOutputs, txTo, txToLen, nIn, flags, err);
 }
 
 
@@ -109,7 +132,7 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
     }
 
     CAmount am(0);
-    return ::verify_script(scriptPubKey, scriptPubKeyLen, am, txTo, txToLen, nIn, flags, err);
+    return ::verify_script(scriptPubKey, scriptPubKeyLen, am, NULL, NULL, NULL, txTo, txToLen, nIn, flags, err);
 }
 
 unsigned int bitcoinconsensus_version()

@@ -66,6 +66,11 @@ EXPORT_SYMBOL int bitcoinconsensus_verify_script_with_amount(const unsigned char
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
 
+EXPORT_SYMBOL int bitcoinconsensus_verify_script_with_amount_and_hashes(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, uint64_t amount,
+                                                                        unsigned char *hashPrevouts, unsigned char *hashSequence, unsigned char *hashOutputs,
+                                                                        const unsigned char *txTo        , unsigned int txToLen,
+                                                                        unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
+
 EXPORT_SYMBOL unsigned int bitcoinconsensus_version();
 
 #ifdef __cplusplus
