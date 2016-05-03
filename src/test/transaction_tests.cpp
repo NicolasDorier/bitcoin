@@ -91,6 +91,37 @@ string FormatScriptFlags(unsigned int flags)
 
 BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(tx_malformed)
+{
+    // It's illegal to encode a witness when all vtxinwit entries are empty.
+    try
+    {
+        string transaction = "020000000001010001000000000000000000000000000000000000000000000000000000000000000000000251b201000000010000000000000000000000000000";
+        CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
+        CTransaction tx;
+        stream >> tx;
+        BOOST_ERROR("It should be illegal to encode a witness when all vtxinwit entries are empty.");
+    }
+    catch (const std::ios_base::failure& e)
+    {
+
+    }
+
+    // Unknown flag in the serialization
+    try
+    {
+        string transaction = "0100000000030100010000000000000000000000000000000000000000000000000000000000000000000000ffffffff01e8030000000000001976a9144c9c3dfac4207d5d8cb89df5722cb3d712385e3f88ac02483045022100cfb07164b36ba64c1b1e8c7720a56ad64d96f6ef332d3d37f9cb3c96477dc44502200a464cd7a9cf94cd70f66ce4f4f0625ef650052c7afcfe29d7d7e01830ff91ed012103596d3451025c19dbbdeb932d6bf8bfb4ad499b95b6f88db8899efac102e5fc7100000000";
+        CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
+        CTransaction tx;
+        stream >> tx;
+        BOOST_ERROR("It should be illegal to deserialize unknown transaction optional data");
+    }
+    catch (const std::ios_base::failure& e)
+    {
+
+    }
+}
+
 BOOST_AUTO_TEST_CASE(tx_valid)
 {
     // Read tests from test/data/tx_valid.json
