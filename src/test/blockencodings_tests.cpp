@@ -142,7 +142,36 @@ public:
             READWRITE(msb);
             shorttxids[i] = (uint64_t(msb) << 32) | uint64_t(lsb);
         }
-        READWRITE(prefilledtxn);
+        uint64_t prefilledtxn_size = (uint64_t)prefilledtxn.size();
+        READWRITE(COMPACTSIZE(prefilledtxn_size));
+        if (ser_action.ForRead()) {
+            size_t i = 0;
+            while (prefilledtxn.size() < prefilledtxn_size) {
+                prefilledtxn.resize(std::min((uint64_t)(1000 + prefilledtxn.size()), prefilledtxn_size));
+                for (; i < prefilledtxn.size(); i++) {
+                    uint64_t index = 0;
+                    READWRITE(COMPACTSIZE(index));
+                    if (index > std::numeric_limits<uint16_t>::max())
+                        throw std::ios_base::failure("index overflowed 16 bits");
+                    prefilledtxn[i].index = index;
+                    READWRITE(REF(TransactionCompressor(prefilledtxn[i].tx)));
+                }
+            }
+
+            uint16_t offset = 0;
+            for (size_t i = 0; i < prefilledtxn.size(); i++) {
+                if (uint64_t(prefilledtxn[i].index) + uint64_t(offset) > std::numeric_limits<uint16_t>::max())
+                    throw std::ios_base::failure("indexes overflowed 16 bits");
+                prefilledtxn[i].index = prefilledtxn[i].index + offset;
+                offset = prefilledtxn[i].index + 1;
+            }
+        }else {
+            for (size_t i = 0; i < prefilledtxn.size(); i++) {
+                uint64_t index = prefilledtxn[i].index - (i == 0 ? 0 : (prefilledtxn[i - 1].index + 1));
+                READWRITE(COMPACTSIZE(index));
+                READWRITE(REF(TransactionCompressor(prefilledtxn[i].tx)));
+            }
+        }
     }
 };
 
@@ -213,7 +242,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         TestHeaderAndShortIDs shortIDs(block);
         shortIDs.prefilledtxn.resize(2);
         shortIDs.prefilledtxn[0] = {0, block.vtx[0]};
-        shortIDs.prefilledtxn[1] = {1, block.vtx[2]}; // id == 1 as it is 1 after index 1
+        shortIDs.prefilledtxn[1] = {2, block.vtx[2]};
         shortIDs.shorttxids.resize(1);
         shortIDs.shorttxids[0] = shortIDs.GetShortID(block.vtx[1].GetHash());
 

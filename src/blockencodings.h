@@ -99,18 +99,6 @@ struct PrefilledTransaction {
     // as a proper transaction-in-block-index in PartiallyDownloadedBlock
     uint16_t index;
     CTransaction tx;
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        uint64_t idx = index;
-        READWRITE(COMPACTSIZE(idx));
-        if (idx > std::numeric_limits<uint16_t>::max())
-            throw std::ios_base::failure("index overflowed 16-bits");
-        index = idx;
-        READWRITE(REF(TransactionCompressor(tx)));
-    }
 };
 
 typedef enum ReadStatus_t
@@ -176,7 +164,36 @@ public:
             }
         }
 
-        READWRITE(prefilledtxn);
+        uint64_t prefilledtxn_size = (uint64_t)prefilledtxn.size();
+        READWRITE(COMPACTSIZE(prefilledtxn_size));
+        if (ser_action.ForRead()) {
+            size_t i = 0;
+            while (prefilledtxn.size() < prefilledtxn_size) {
+                prefilledtxn.resize(std::min((uint64_t)(1000 + prefilledtxn.size()), prefilledtxn_size));
+                for (; i < prefilledtxn.size(); i++) {
+                    uint64_t index = 0;
+                    READWRITE(COMPACTSIZE(index));
+                    if (index > std::numeric_limits<uint16_t>::max())
+                        throw std::ios_base::failure("index overflowed 16 bits");
+                    prefilledtxn[i].index = index;
+                    READWRITE(REF(TransactionCompressor(prefilledtxn[i].tx)));
+                }
+            }
+
+            uint16_t offset = 0;
+            for (size_t i = 0; i < prefilledtxn.size(); i++) {
+                if (uint64_t(prefilledtxn[i].index) + uint64_t(offset) > std::numeric_limits<uint16_t>::max())
+                    throw std::ios_base::failure("indexes overflowed 16 bits");
+                prefilledtxn[i].index = prefilledtxn[i].index + offset;
+                offset = prefilledtxn[i].index + 1;
+            }
+        }else {
+            for (size_t i = 0; i < prefilledtxn.size(); i++) {
+                uint64_t index = prefilledtxn[i].index - (i == 0 ? 0 : (prefilledtxn[i - 1].index + 1));
+                READWRITE(COMPACTSIZE(index));
+                READWRITE(REF(TransactionCompressor(prefilledtxn[i].tx)));
+            }
+        }
 
         if (ser_action.ForRead())
             FillShortTxIDSelector();
