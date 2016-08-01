@@ -310,6 +310,21 @@ const CChainParams &Params() {
     return *pCurrentParams;
 }
 
+void CChainParams::UpdateBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
+{
+        if (deployment == Consensus::BIP65_HEIGHT_ACTIVE) {
+                consensus.BIP65Height = nStartHeight;
+        }
+        if (deployment == Consensus::BIP66_HEIGHT_ACTIVE) {
+                consensus.BIP66Height = nStartHeight;
+        }
+}
+
+void UpdateRegtestBuriedDeploymentParameters(Consensus::BuriedDeploymentPos deployment, int64_t nStartHeight)
+{
+    regTestParams.UpdateBuriedDeploymentParameters(deployment, nStartHeight);
+}
+
 CChainParams& Params(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
