@@ -153,6 +153,140 @@ const char* GetOpName(opcodetype opcode)
     }
 }
 
+opcodetype GetOpFromName(const std::string& name)
+{
+#define _(o) if (name == #o) return o
+    // push value
+    _(OP_0);
+    _(OP_PUSHDATA1);
+    _(OP_PUSHDATA2);
+    _(OP_PUSHDATA4);
+    _(OP_1NEGATE);
+    _(OP_RESERVED);
+    _(OP_1);
+    _(OP_2);
+    _(OP_3);
+    _(OP_4);
+    _(OP_5);
+    _(OP_6);
+    _(OP_7);
+    _(OP_8);
+    _(OP_9);
+    _(OP_10);
+    _(OP_11);
+    _(OP_12);
+    _(OP_13);
+    _(OP_14);
+    _(OP_15);
+    _(OP_16);
+
+    // control
+    _(OP_NOP);
+    _(OP_VER);
+    _(OP_IF);
+    _(OP_NOTIF);
+    _(OP_VERIF);
+    _(OP_VERNOTIF);
+    _(OP_ELSE);
+    _(OP_ENDIF);
+    _(OP_VERIFY);
+    _(OP_RETURN);
+
+    // stack ops
+    _(OP_TOALTSTACK);
+    _(OP_FROMALTSTACK);
+    _(OP_2DROP);
+    _(OP_2DUP);
+    _(OP_3DUP);
+    _(OP_2OVER);
+    _(OP_2ROT);
+    _(OP_2SWAP);
+    _(OP_IFDUP);
+    _(OP_DEPTH);
+    _(OP_DROP);
+    _(OP_DUP);
+    _(OP_NIP);
+    _(OP_OVER);
+    _(OP_PICK);
+    _(OP_ROLL);
+    _(OP_ROT);
+    _(OP_SWAP);
+    _(OP_TUCK);
+
+    // splice ops
+    _(OP_CAT);
+    _(OP_SUBSTR);
+    _(OP_LEFT);
+    _(OP_RIGHT);
+    _(OP_SIZE);
+
+    // bit logic
+    _(OP_INVERT);
+    _(OP_AND);
+    _(OP_OR);
+    _(OP_XOR);
+    _(OP_EQUAL);
+    _(OP_EQUALVERIFY);
+    _(OP_RESERVED1);
+    _(OP_RESERVED2);
+
+    // numeric
+    _(OP_1ADD);
+    _(OP_1SUB);
+    _(OP_2MUL);
+    _(OP_2DIV);
+    _(OP_NEGATE);
+    _(OP_ABS);
+    _(OP_NOT);
+    _(OP_0NOTEQUAL);
+    _(OP_ADD);
+    _(OP_SUB);
+    _(OP_MUL);
+    _(OP_DIV);
+    _(OP_MOD);
+    _(OP_LSHIFT);
+    _(OP_RSHIFT);
+    _(OP_BOOLAND);
+    _(OP_BOOLOR);
+    _(OP_NUMEQUAL);
+    _(OP_NUMEQUALVERIFY);
+    _(OP_NUMNOTEQUAL);
+    _(OP_LESSTHAN);
+    _(OP_GREATERTHAN);
+    _(OP_LESSTHANOREQUAL);
+    _(OP_GREATERTHANOREQUAL);
+    _(OP_MIN);
+    _(OP_MAX);
+    _(OP_WITHIN);
+
+    // crypto
+    _(OP_RIPEMD160);
+    _(OP_SHA1);
+    _(OP_SHA256);
+    _(OP_HASH160);
+    _(OP_HASH256);
+    _(OP_CODESEPARATOR);
+    _(OP_CHECKSIG);
+    _(OP_CHECKSIGVERIFY);
+    _(OP_CHECKMULTISIG);
+    _(OP_CHECKMULTISIGVERIFY);
+
+    // expanson
+    _(OP_NOP1);
+    _(OP_CHECKLOCKTIMEVERIFY);
+    _(OP_CHECKSEQUENCEVERIFY);
+    _(OP_NOP4);
+    _(OP_NOP5);
+    _(OP_NOP6);
+    _(OP_NOP7);
+    _(OP_NOP8);
+    _(OP_NOP9);
+    _(OP_NOP10);
+
+    return OP_INVALIDOPCODE;
+#undef _
+}
+
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
 {
     unsigned int n = 0;

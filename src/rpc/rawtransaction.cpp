@@ -126,7 +126,77 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     }
 }
 
-UniValue getrawtransaction(const UniValue& params, bool fHelp)
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
+}
+
+UniValue runscript(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "runscript \"OP OP2 [...]\"\n"
+            "Run the given script and return the resulting main and alt stacks.\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("runscript", "\"OP_1 OP_ADD1\"")
+        );
+
+    LOCK(cs_main);
+    
+    std::vector<std::vector<unsigned char> > stack;
+    
+    std::string scriptString = request.params[0].get_str();
+    std::stringstream scriptReader(scriptString);
+
+    CScript script;
+    std::string s;
+    try {
+    while (scriptReader.good()) {
+        scriptReader >> s;
+        if (s.length() == 0) continue;
+        // std::string s = request.params[i].get_str();
+        // printf("%s\n", s.c_str());
+        opcodetype oct = GetOpFromName(s);
+        if (oct != OP_INVALIDOPCODE) {
+            script << oct;
+        } else if (s[0] == '0' || s[1] == 'x') {
+            printf("HEX %s\n", HexStr(ParseHex(s.substr(2))).c_str());
+            script << ParseHex(s.substr(2));
+        } else if (is_number(s)) {
+            script << atoi(s.c_str());
+        } else {
+            throw std::runtime_error(
+                "Unable to interpret data (not an opcode, not a number, and not a hex value): " + s
+            );
+        }
+    }
+    } catch (const std::exception& e) {
+        throw std::runtime_error(
+            std::string("Error reading: ") + e.what()
+        );
+    }
+
+    // opcodetype GetOpFromName(const std::string& name);
+    
+    std::string error = "";
+    if (!EvalScript(stack, script, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE)) {
+        error = "An error occurred evaluating the script.";
+    }
+    
+    UniValue result(UniValue::VOBJ);
+    UniValue ustack(UniValue::VARR);
+    for (size_t i = 0; i < stack.size(); i++) {
+        std::vector<unsigned char> e = stack[i];
+        ustack.push_back(HexStr(e.begin(), e.end()));
+    }
+    result.push_back(Pair("stack", ustack));
+    if (error.length() > 0) result.push_back(Pair("error", error));
+    return result;
+}
+
+UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -916,6 +986,7 @@ static const CRPCCommand commands[] =
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          true  },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true  },
+    { "bc3",                "runscript",              &runscript,              true  },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC)
