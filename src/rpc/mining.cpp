@@ -916,11 +916,13 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     { "mining",             "getnetworkhashps",       &getnetworkhashps,       true  },
     { "mining",             "getmininginfo",          &getmininginfo,          true  },
+    { "mining",             "gmi",                    &getmininginfo,          true  },
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  true  },
     { "mining",             "getblocktemplate",       &getblocktemplate,       true  },
     { "mining",             "submitblock",            &submitblock,            true  },
 
     { "generating",         "generate",               &generate,               true  },
+    { "generating",         "g",                      &generate,               true  },
     { "generating",         "generatetoaddress",      &generatetoaddress,      true  },
 
     { "util",               "estimatefee",            &estimatefee,            true  },

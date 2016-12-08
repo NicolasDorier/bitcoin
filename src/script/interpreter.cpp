@@ -12,10 +12,18 @@
 #include "pubkey.h"
 #include "script/script.h"
 #include "uint256.h"
+#include "utilstrencodings.h"
 
 using namespace std;
 
 typedef vector<unsigned char> valtype;
+
+void StackPrint(vector<vector<unsigned char> >& stack) {
+    for (size_t i = 0; i < stack.size(); i++) {
+        std::vector<unsigned char> e = stack[i];
+        printf("%s", (std::string("0x") + HexStr(e.begin(), e.end())).c_str());
+    }
+}
 
 namespace {
 
@@ -26,8 +34,12 @@ inline bool set_success(ScriptError* ret)
     return true;
 }
 
-inline bool set_error(ScriptError* ret, const ScriptError serror)
+//inline
+bool set_error(ScriptError* ret, const ScriptError serror)
 {
+    if (serror != SCRIPT_ERR_UNKNOWN_ERROR) {
+        printf("SCRIPT ERROR: %s\n", ScriptErrorString(serror));
+    }
     if (ret)
         *ret = serror;
     return false;
@@ -309,6 +321,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 }
                 stack.push_back(vchPushValue);
             } else if (fExec || (OP_IF <= opcode && opcode <= OP_ENDIF))
+            printf("OPCODE: %s (%02x)\n", GetOpName(opcode), opcode);
             switch (opcode)
             {
                 //
@@ -1399,8 +1412,10 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     }
 
     // Scripts inside witness implicitly require cleanstack behaviour
-    if (stack.size() != 1)
+    if (stack.size() != 1) {
+        StackPrint(stack);
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
+    }
     if (!CastToBool(stack.back()))
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
     return true;
