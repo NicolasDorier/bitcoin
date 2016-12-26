@@ -321,7 +321,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                 }
                 stack.push_back(vchPushValue);
             } else if (fExec || (OP_IF <= opcode && opcode <= OP_ENDIF))
-            printf("OPCODE: %s (%02x)\n", GetOpName(opcode), opcode);
             switch (opcode)
             {
                 //
