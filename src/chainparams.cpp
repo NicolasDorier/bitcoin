@@ -34,6 +34,9 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     genesis.vtx.push_back(txNew);
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
+    // if (DetermineNonceRequired(genesis, nBits)) {
+    //     DetermineNonce(genesis, nBits);
+    // }
     return genesis;
 }
 
@@ -76,9 +79,9 @@ public:
         consensus.nMajorityWindow = 1000;
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-        consensus.powLimit = uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.powLimit = uint256S("0000007fffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 60 * 60; // 1 hour
+        consensus.nPowTargetSpacing = 1 * 60; // 1 min
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -112,11 +115,11 @@ public:
         nDefaultPort = 8444;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1231006505, 82227878, 0x1d8fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1231006505, 51990733, 0x1d7fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000025172434709e15026dc4fdaf1c89ff605993b3810b7ec63e4c778b0f9"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000003f47b7abca4ee63eb925c70bcc0bf780fbec81ad164348de1edf6a6265"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
-
+        
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("192.168.117.22", "192.168.117.22", true));
         // vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be", true)); // Pieter Wuille, only supports x1, x5, x9, and xd
