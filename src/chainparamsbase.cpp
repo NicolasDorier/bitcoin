@@ -13,11 +13,14 @@
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::BC2 = "bc2";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
     strUsage += HelpMessageGroup(_("Chain selection options:"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    strUsage += HelpMessageOpt("-bc2net", "Use the bc2 chain ");
+    strUsage += HelpMessageOpt("-mainnet", "Use the main chain ");
     if (debugHelp) {
         strUsage += HelpMessageOpt("-regtest", "Enter regression test mode, which uses a special chain in which blocks can be solved instantly. "
                                    "This is intended for regression testing tools and app development.");
@@ -51,6 +54,20 @@ public:
 };
 static CBaseTestNetParams testNetParams;
 
+/**
+* Testnet (v3)
+*/
+class CBaseBC2Params : public CBaseChainParams
+{
+public:
+    CBaseBC2Params()
+    {
+        nRPCPort = 18332;
+        strDataDir = "bc2";
+    }
+};
+static CBaseBC2Params bc2Params;
+
 /*
  * Regression test
  */
@@ -81,6 +98,8 @@ CBaseChainParams& BaseParams(const std::string& chain)
         return testNetParams;
     else if (chain == CBaseChainParams::REGTEST)
         return regTestParams;
+    else if (chain == CBaseChainParams::BC2)
+        return bc2Params;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
@@ -94,14 +113,18 @@ std::string ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
+    bool fBC2Net = GetBoolArg("-bc2net", false);
+    bool fMainNet = GetBoolArg("-mainnet", false);
 
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet.");
+    if (fMainNet)
+        return CBaseChainParams::MAIN;
+    if (fBC2Net)
+        return CBaseChainParams::BC2;
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    return CBaseChainParams::BC2;
 }
 
 bool AreBaseParamsConfigured()
