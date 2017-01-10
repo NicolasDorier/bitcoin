@@ -132,9 +132,9 @@ bool is_number(const std::string& s)
         s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
-UniValue runscript(const JSONRPCRequest& request)
+UniValue runscript(const UniValue& params, bool fHelp)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (fHelp || params.size() != 1)
         throw std::runtime_error(
             "runscript \"OP OP2 [...]\"\n"
             "Run the given script and return the resulting stack.\n"
@@ -147,7 +147,7 @@ UniValue runscript(const JSONRPCRequest& request)
     
     std::vector<std::vector<unsigned char> > stack;
     
-    std::string scriptString = request.params[0].get_str();
+    std::string scriptString = params[0].get_str();
     std::stringstream scriptReader(scriptString);
 
     CScript script;
@@ -191,9 +191,9 @@ UniValue runscript(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue base58encode(const JSONRPCRequest& request)
+UniValue base58encode(const UniValue& params, bool fHelp)
 {
-    if (request.fHelp || request.params.size() != 1)
+    if (fHelp || params.size() != 1)
         throw std::runtime_error(
             "base58encode \"hex\"\n"
             "Generate base-58 encoding of the given hex value.\n"
@@ -204,7 +204,7 @@ UniValue base58encode(const JSONRPCRequest& request)
 
     LOCK(cs_main);
     
-    std::string hexstr = request.params[0].get_str();
+    std::string hexstr = params[0].get_str();
     std::vector<unsigned char> hex;
     if (hexstr[0] == '0' && hexstr[1] == 'x') {
         hex = ParseHex(hexstr.substr(2));
@@ -215,7 +215,7 @@ UniValue base58encode(const JSONRPCRequest& request)
     return b58;
 }
 
-UniValue getrawtransaction(const JSONRPCRequest& request)
+UniValue getrawtransaction(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -1010,8 +1010,8 @@ static const CRPCCommand commands[] =
 
     { "blockchain",         "gettxoutproof",          &gettxoutproof,          true  },
     { "blockchain",         "verifytxoutproof",       &verifytxoutproof,       true  },
-    { "bc3",                "runscript",              &runscript,              true  },
-    { "bc3",                "base58encode",           &base58encode,           true  },
+    { "bc2",                "runscript",              &runscript,              true  },
+    { "bc2",                "base58encode",           &base58encode,           true  },
 };
 
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC)
