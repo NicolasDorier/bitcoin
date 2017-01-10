@@ -682,10 +682,11 @@ bool CNetAddr::IsIPv6() const
 
 bool CNetAddr::IsRFC1918() const
 {
-    return IsIPv4() && (
-        GetByte(3) == 10 ||
-        (GetByte(3) == 192 && GetByte(2) == 168) ||
-        (GetByte(3) == 172 && (GetByte(2) >= 16 && GetByte(2) <= 31)));
+    return false;
+    // return IsIPv4() && (
+    //     GetByte(3) == 10 ||
+    //     (GetByte(3) == 192 && GetByte(2) == 168) ||
+    //     (GetByte(3) == 172 && (GetByte(2) >= 16 && GetByte(2) <= 31)));
 }
 
 bool CNetAddr::IsRFC2544() const
