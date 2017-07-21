@@ -1895,17 +1895,8 @@ bool CWalletTx::IsTrusted() const
             return false;
         const CTxOut& parentOut = parent->tx->vout[txin.prevout.n];
         const auto& isMine = pwallet->IsMine(parentOut);
-        if (isMine != ISMINE_SPENDABLE)
-        {
-            // If the wallet is hdwatchonly, check if it is a key we generated
-            if (!pwallet->IsHDWatchOnly() || isMine != ISMINE_WATCH_SOLVABLE)
-                return false;
-            const auto& meta = pwallet->mapKeyMetadata;
-            auto it = meta.find(CScriptID(parentOut.scriptPubKey));
-            if (it == meta.end() ||
-                it->second.hdKeypath.empty())
-                return false;
-        }
+        if (!(isMine & ISMINE_TRUSTED))
+            return false;
     }
     return true;
 }
@@ -2213,8 +2204,8 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                     continue;
                 }
 
-                bool fSpendableIn = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
-                bool fSolvableIn = (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
+                bool fSpendableIn = ((mine & ISMINE_TRUSTED) != ISMINE_NO) || (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO);
+                bool fSolvableIn = (mine & (ISMINE_TRUSTED | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO;
 
                 vCoins.push_back(COutput(pcoin, i, nDepth, fSpendableIn, fSolvableIn, safeTx));
 

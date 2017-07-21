@@ -1089,7 +1089,7 @@ public:
             }
             isminetype typ;
             typ = IsMine(*pwallet, subscript, SIGVERSION_WITNESS_V0);
-            if (typ != ISMINE_SPENDABLE && typ != ISMINE_WATCH_SOLVABLE)
+            if (!(typ & ISMINE_TRUSTED) && typ != ISMINE_WATCH_SOLVABLE)
                 return false;
             CScript witscript = GetScriptForWitness(subscript);
             pwallet->AddCScript(witscript);

@@ -22,7 +22,9 @@ enum isminetype
     //! Indicates that we know how to create a scriptSig that would solve this if we were given the appropriate private keys
     ISMINE_WATCH_SOLVABLE = 2,
     ISMINE_WATCH_ONLY = ISMINE_WATCH_SOLVABLE | ISMINE_WATCH_UNSOLVABLE,
-    ISMINE_SPENDABLE = 4,
+    ISMINE_TRUSTED = 4,
+    ISMINE_CANSIGN = 8,
+    ISMINE_SPENDABLE = ISMINE_TRUSTED | ISMINE_CANSIGN,
     ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
 };
 /** used for bitflags of isminetype */
