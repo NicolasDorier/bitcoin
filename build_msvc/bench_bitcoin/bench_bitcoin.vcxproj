@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Label="configInitTarget" Project="..\common.init.vcxproj" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -210,6 +211,6 @@
     </ItemGroup>
     <HeaderFromHexdump RawFilePath="%(RawBenchFile.FullPath)" HeaderFilePath="%(RawBenchFile.FullPath).h" SourceHeader="static unsigned const char %(RawBenchFile.Filename)[] = {" SourceFooter="};" />
   </Target>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Label="configTarget" Project="..\common.vcxproj" />
   <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />
 </Project>

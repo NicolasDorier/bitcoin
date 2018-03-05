@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Label="configInitTarget" Project="..\common.init.vcxproj" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -170,7 +171,5 @@
     <ClCompile Include="..\..\src\crypto\sha256.cpp" />
     <ClCompile Include="..\..\src\crypto\sha512.cpp" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <Import Label="configTarget" Project="..\common.vcxproj" />
 </Project>
