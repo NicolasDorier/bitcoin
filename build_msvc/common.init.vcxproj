@@ -8,4 +8,7 @@
 
 		<WindowsTargetPlatformVersion>$(WindowsTargetPlatformVersion_10)</WindowsTargetPlatformVersion>
 	</PropertyGroup>
+	<PropertyGroup>
+		<Platform Condition="'$(Platform)' == ''">Win32</Platform>
+	</PropertyGroup>
 </Project>
